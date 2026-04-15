@@ -6,7 +6,7 @@
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 html,body {
-  width:700px; height:580px;
+  width:700px; height:640px;
   background: #0F172A;
   font-family: 'Segoe UI', Arial, sans-serif;
   color: #E2E8F0;
@@ -241,10 +241,24 @@ async function runChecks() {
   }, 2000);
 }
 
-function launchKiosk() {
-  document.getElementById('btnRun').disabled = true;
-  document.getElementById('btnRun').textContent = 'Memulai...';
-  window.examAPI.launchKiosk();
+async function launchKiosk() {
+  const btn = document.getElementById('btnRun');
+  btn.disabled = true;
+  btn.textContent = 'Memulai...';
+  try {
+    const result = await window.examAPI.launchKiosk();
+    if (result && !result.ok) {
+      btn.disabled = false;
+      btn.textContent = '▶ JALANKAN UJIAN';
+      document.getElementById('statusMsg').textContent = '❌ Gagal memulai: ' + (result.error || 'Unknown error');
+      document.getElementById('statusMsg').style.color = '#EF4444';
+    }
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = '▶ JALANKAN UJIAN';
+    document.getElementById('statusMsg').textContent = '❌ Gagal memulai ujian';
+    document.getElementById('statusMsg').style.color = '#EF4444';
+  }
 }
 
 function openSettings() {

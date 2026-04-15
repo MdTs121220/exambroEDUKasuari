@@ -72,9 +72,9 @@ function createChecker() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   checkerWin = new BrowserWindow({
     width:  700,
-    height: 580,
+    height: 640,
     x: Math.round((width - 700) / 2),
-    y: Math.round((height - 580) / 2),
+    y: Math.round((height - 640) / 2),
     frame:           false,
     resizable:       false,
     alwaysOnTop:     true,
@@ -151,7 +151,9 @@ function launchKiosk() {
     return { action: 'deny' };
   });
 
-  browserWin.loadURL(config.url);
+  browserWin.loadURL(config.url).catch(e => {
+    console.error('loadURL error:', e);
+  });
 
   // ── Shortcut keluar rahasia: Ctrl+Shift+Q ─────────────────
   globalShortcut.register('Control+Shift+Q', () => showExitPrompt());
@@ -237,8 +239,14 @@ ipcMain.handle('save-config', (_, newConfig) => {
   return true;
 });
 
-ipcMain.handle('launch-kiosk', () => {
-  launchKiosk();
+ipcMain.handle('launch-kiosk', async () => {
+  try {
+    launchKiosk();
+    return { ok: true };
+  } catch (e) {
+    console.error('launch-kiosk error:', e);
+    return { ok: false, error: e.message };
+  }
 });
 
 ipcMain.handle('open-settings', () => {
