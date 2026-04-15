@@ -7,8 +7,8 @@
   "license": "MIT",
   "scripts": {
     "start": "electron .",
-    "build:win": "electron-builder --win",
-    "build:linux": "electron-builder --linux",
+    "build:win": "electron-builder --win --publish=never",
+    "build:linux": "electron-builder --linux --publish=never",
     "build:mac": "electron-builder --mac"
   },
   "dependencies": {
@@ -19,7 +19,7 @@
     "electron-builder": "^24.9.1"
   },
   "build": {
-    "publish": "never",
+    "publish": null,
     "appId": "com.edutimurkasuari.exambro",
     "productName": "ExamBrowser EDU Kasuari",
     "copyright": "© 2025 EDU Timur Kasuari",
