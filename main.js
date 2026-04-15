@@ -63,7 +63,7 @@ function createChecker() {
     },
   });
   checkerWin.loadFile('checker.html');
-  checkerWin.setContentProtection(true);
+  // checkerWin.setContentProtection(true);
   checkerWin.webContents.on('before-input-event', (e, input) => {
     if (input.key === 'F12' || (input.control && input.shift && 'IJC'.includes(input.key.toUpperCase())))
       e.preventDefault();
