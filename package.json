@@ -1,0 +1,52 @@
+{
+  "name": "exambro-edu-kasuari",
+  "version": "1.0.0",
+  "description": "ExamBrowser EDU Timur Kasuari - Aplikasi Ujian Aman",
+  "main": "main.js",
+  "author": "EDU Timur Kasuari",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win",
+    "build:linux": "electron-builder --linux",
+    "build:mac": "electron-builder --mac"
+  },
+  "dependencies": {
+    "electron-store": "^8.1.0"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.edutimurkasuari.exambro",
+    "productName": "ExamBrowser EDU Kasuari",
+    "copyright": "© 2025 EDU Timur Kasuari",
+    "win": {
+      "target": [{"target": "nsis", "arch": ["x64"]}],
+      "icon": "assets/icon.ico",
+      "requestedExecutionLevel": "requireAdministrator"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon.png"
+    },
+    "nsis": {
+      "oneClick": true,
+      "allowToChangeInstallationDirectory": false,
+      "installerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "ExamBrowser EDU Kasuari"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "splash.html",
+      "checker.html",
+      "settings.html",
+      "assets/**"
+    ]
+  }
+}

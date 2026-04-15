@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html,body {
+  width:700px; height:580px;
+  background: #0F172A;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  color: #E2E8F0;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Header */
+.header {
+  background: linear-gradient(135deg,#1E3A8A,#2563EB);
+  padding: 18px 28px;
+  display:flex; align-items:center; gap:16px;
+}
+.header-icon {
+  width:48px; height:48px;
+  background:rgba(255,255,255,.15);
+  border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:24px;
+}
+.header-title { font-size:18px; font-weight:800; color:#fff; }
+.header-sub   { font-size:11px; color:#93C5FD; margin-top:2px; }
+
+/* Body */
+.body { padding: 20px 28px; }
+
+.app-name-badge {
+  text-align:center;
+  font-size:22px; font-weight:900;
+  color:#F59E0B; letter-spacing:2px;
+  margin-bottom:18px;
+}
+
+/* Check rows */
+.checks { display:flex; flex-direction:column; gap:8px; }
+.check-row {
+  display:flex; align-items:center;
+  background:#1E293B;
+  border-radius:10px;
+  padding:10px 16px;
+  gap:14px;
+  border:1px solid #334155;
+  transition: border-color .2s;
+}
+.check-row.ok    { border-color:#22C55E20; }
+.check-row.warn  { border-color:#F59E0B40; }
+.check-row.error { border-color:#EF444440; }
+
+.check-icon { font-size:22px; width:32px; text-align:center; flex-shrink:0; }
+.check-info { flex:1; }
+.check-label { font-size:12px; font-weight:700; color:#60A5FA; text-transform:uppercase; letter-spacing:.5px; }
+.check-value { font-size:14px; color:#E2E8F0; margin-top:2px; }
+.check-status { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+.check-status.ok    { background:#22C55E20; color:#22C55E; }
+.check-status.warn  { background:#F59E0B20; color:#F59E0B; }
+.check-status.error { background:#EF444420; color:#EF4444; }
+.check-status.loading { background:#3B82F620; color:#3B82F6; animation:spin 1s linear infinite; }
+
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* Footer */
+.footer {
+  position:absolute; bottom:0; left:0; right:0;
+  padding:14px 28px;
+  display:flex; align-items:center; justify-content:space-between;
+  background:#0F172A;
+  border-top:1px solid #1E293B;
+}
+.url-info { font-size:11px; color:#475569; }
+.url-val  { font-size:12px; color:#60A5FA; font-weight:600; }
+
+.btn {
+  padding:10px 24px; border:none; border-radius:10px;
+  font-size:14px; font-weight:700; cursor:pointer;
+  transition:all .2s;
+}
+.btn-settings {
+  background:#1E293B; color:#94A3B8;
+  border:1px solid #334155;
+}
+.btn-settings:hover { background:#334155; color:#E2E8F0; }
+.btn-run {
+  background: linear-gradient(135deg,#2563EB,#1D4ED8);
+  color:#fff; min-width:140px;
+}
+.btn-run:hover:not(:disabled) { transform:translateY(-1px); box-shadow:0 4px 20px rgba(37,99,235,.4); }
+.btn-run:disabled { background:#334155; color:#475569; cursor:not-allowed; }
+
+.status-overall {
+  font-size:12px; color:#475569;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">🖥️</div>
+  <div>
+    <div class="header-title">Pemeriksaan Sistem</div>
+    <div class="header-sub">Pastikan semua komponen siap sebelum ujian dimulai</div>
+  </div>
+</div>
+
+<div class="body">
+  <div class="app-name-badge" id="appNameBadge">EXAMBROWSER EDU KASUARI</div>
+
+  <div class="checks" id="checks">
+    <div class="check-row" id="row-os">
+      <div class="check-icon">💻</div>
+      <div class="check-info">
+        <div class="check-label">Sistem Operasi</div>
+        <div class="check-value" id="val-os">Memeriksa...</div>
+      </div>
+      <div class="check-status loading" id="st-os">↻</div>
+    </div>
+
+    <div class="check-row" id="row-cpu">
+      <div class="check-icon">⚙️</div>
+      <div class="check-info">
+        <div class="check-label">Prosesor (CPU)</div>
+        <div class="check-value" id="val-cpu">Memeriksa...</div>
+      </div>
+      <div class="check-status loading" id="st-cpu">↻</div>
+    </div>
+
+    <div class="check-row" id="row-ram">
+      <div class="check-icon">🧠</div>
+      <div class="check-info">
+        <div class="check-label">Memori (RAM)</div>
+        <div class="check-value" id="val-ram">Memeriksa...</div>
+      </div>
+      <div class="check-status loading" id="st-ram">↻</div>
+    </div>
+
+    <div class="check-row" id="row-res">
+      <div class="check-icon">🖥</div>
+      <div class="check-info">
+        <div class="check-label">Resolusi Layar</div>
+        <div class="check-value" id="val-res">Memeriksa...</div>
+      </div>
+      <div class="check-status loading" id="st-res">↻</div>
+    </div>
+
+    <div class="check-row" id="row-net">
+      <div class="check-icon">🌐</div>
+      <div class="check-info">
+        <div class="check-label">Koneksi Internet</div>
+        <div class="check-value" id="val-net">Memeriksa...</div>
+      </div>
+      <div class="check-status loading" id="st-net">↻</div>
+    </div>
+
+    <div class="check-row" id="row-ver">
+      <div class="check-icon">📦</div>
+      <div class="check-info">
+        <div class="check-label">Versi Aplikasi</div>
+        <div class="check-value" id="val-ver">Memeriksa...</div>
+      </div>
+      <div class="check-status loading" id="st-ver">↻</div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <div>
+    <div class="url-info">Server Ujian:</div>
+    <div class="url-val" id="urlDisplay">-</div>
+    <div class="status-overall" id="statusMsg">Memeriksa sistem...</div>
+  </div>
+  <div style="display:flex;gap:10px">
+    <button class="btn btn-settings" onclick="openSettings()">⚙️ Pengaturan</button>
+    <button class="btn btn-run" id="btnRun" disabled onclick="launchKiosk()">▶ JALANKAN UJIAN</button>
+  </div>
+</div>
+
+<script>
+function setStatus(id, status, value) {
+  const row = document.getElementById('row-'+id);
+  const st  = document.getElementById('st-'+id);
+  const val = document.getElementById('val-'+id);
+  if (value) val.textContent = value;
+  row.className = 'check-row ' + status;
+  if (status === 'ok')    { st.className = 'check-status ok';    st.textContent = '✓'; }
+  if (status === 'warn')  { st.className = 'check-status warn';  st.textContent = '⚠'; }
+  if (status === 'error') { st.className = 'check-status error'; st.textContent = '✗'; }
+}
+
+async function runChecks() {
+  const info = await window.examAPI.getSystemInfo();
+
+  document.getElementById('urlDisplay').textContent = info.url;
+
+  // OS
+  setTimeout(() => setStatus('os', 'ok', info.os), 300);
+
+  // CPU
+  setTimeout(() => setStatus('cpu', 'ok', info.cpu + ' (' + info.cores + ' core)'), 600);
+
+  // RAM
+  setTimeout(() => {
+    const ok = info.ram >= 1024;
+    setStatus('ram', ok ? 'ok' : 'warn', info.ram + ' MB' + (ok ? '' : ' (min. 1GB)'));
+  }, 900);
+
+  // Resolusi
+  setTimeout(() => {
+    const [w, h] = info.resolution.split('x').map(Number);
+    const ok = w >= 1024 && h >= 600;
+    setStatus('res', ok ? 'ok' : 'warn', info.resolution + (ok ? '' : ' (min. 1024x600)'));
+  }, 1200);
+
+  // Internet
+  setTimeout(() => {
+    setStatus('net', info.online ? 'ok' : 'error',
+      info.online ? 'Terhubung ke server ujian ✓' : 'Tidak ada koneksi! Periksa jaringan internet.');
+  }, 1500);
+
+  // Versi
+  setTimeout(() => {
+    setStatus('ver', 'ok', 'v' + info.version + ' — Aplikasi Lengkap');
+  }, 1800);
+
+  // Aktifkan tombol
+  setTimeout(() => {
+    const allOk = info.online;
+    const btn = document.getElementById('btnRun');
+    btn.disabled = !allOk;
+    document.getElementById('statusMsg').textContent = allOk
+      ? '✅ Semua sistem siap — klik JALANKAN UJIAN'
+      : '❌ Ada masalah koneksi — periksa internet';
+    document.getElementById('statusMsg').style.color = allOk ? '#22C55E' : '#EF4444';
+  }, 2000);
+}
+
+function launchKiosk() {
+  document.getElementById('btnRun').disabled = true;
+  document.getElementById('btnRun').textContent = 'Memulai...';
+  window.examAPI.launchKiosk();
+}
+
+function openSettings() {
+  window.examAPI.openSettings();
+}
+
+runChecks();
+</script>
+</body>
+</html>
