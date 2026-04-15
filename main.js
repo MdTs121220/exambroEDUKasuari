@@ -11,6 +11,7 @@ function loadConfig() {
   const defaults = {
     url:           'https://edu.timurkasuari.com/cbt/',
     settings_pass: 'edukasuari2025',
+    exit_pass:     '12345',
     version:       '1.0.0',
     app_name:      'ExamBrowser EDU Kasuari',
   };
@@ -178,8 +179,9 @@ ipcMain.handle('get-system-info', async () => {
   };
 });
 
-ipcMain.handle('get-config',      ()      => config);
-ipcMain.handle('verify-password', (_, p)  => p === config.settings_pass);
+ipcMain.handle('get-config',           ()      => config);
+ipcMain.handle('verify-password',      (_, p)  => p === config.settings_pass);
+ipcMain.handle('verify-exit-password', (_, p)  => p === config.exit_pass);
 ipcMain.handle('save-config',     (_, c)  => { config = Object.assign(config, c); saveConfig(config); return true; });
 ipcMain.handle('open-settings',   ()      => { openSettings(); return true; });
 ipcMain.handle('close-settings',  ()      => { if (settingsWin && !settingsWin.isDestroyed()) { settingsWin.destroy(); settingsWin = null; } return true; });

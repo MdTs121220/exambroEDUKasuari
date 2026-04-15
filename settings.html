@@ -6,180 +6,179 @@
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 html,body {
-  width:520px; height:auto; overflow-x:hidden; min-height:300px;
-  background:#1E293B;
-  font-family:'Segoe UI', Arial, sans-serif;
-  color:#E2E8F0;
-  overflow:hidden;
-  user-select:none;
+  width:520px; height:auto; min-height:300px;
+  background:#1E293B; font-family:'Segoe UI',Arial,sans-serif;
+  color:#E2E8F0; overflow-x:hidden; user-select:none;
 }
 .header {
   background:linear-gradient(135deg,#1E3A8A,#1E293B);
-  padding:14px 20px;
-  display:flex; align-items:center; gap:12px;
+  padding:14px 20px; display:flex; align-items:center; gap:12px;
   border-bottom:1px solid #334155;
 }
 .header-title { font-size:15px; font-weight:800; color:#fff; }
 .header-sub   { font-size:11px; color:#64748B; }
 .close-btn {
-  margin-left:auto; background:none; border:none;
-  color:#64748B; font-size:18px; cursor:pointer;
-  width:28px; height:28px; display:flex; align-items:center; justify-content:center;
-  border-radius:6px;
+  margin-left:auto; background:none; border:none; color:#64748B;
+  font-size:18px; cursor:pointer; width:28px; height:28px;
+  display:flex; align-items:center; justify-content:center; border-radius:6px;
 }
 .close-btn:hover { background:#334155; color:#E2E8F0; }
-
 .body { padding:20px; }
-
-/* Password gate */
-#pinGate { display:block; }
-#settingsBody { display:none; }
-#exitBody { display:none; }
-
 .label {
   font-size:11px; font-weight:700; color:#64748B;
   text-transform:uppercase; letter-spacing:.5px;
   margin-bottom:6px; display:block;
 }
 .input-field {
-  width:100%; padding:10px 14px;
-  background:#0F172A; border:1px solid #334155;
-  border-radius:8px; color:#E2E8F0; font-size:14px;
-  outline:none; margin-bottom:12px;
+  width:100%; padding:10px 12px; background:#0F172A;
+  border:1px solid #334155; border-radius:8px;
+  color:#E2E8F0; font-size:14px; outline:none; margin-bottom:12px;
 }
 .input-field:focus { border-color:#3B82F6; }
-
-.btn { 
+.btn {
   padding:10px 20px; border:none; border-radius:8px;
-  font-size:13px; font-weight:700; cursor:pointer;
-  transition:all .15s;
+  font-size:13px; font-weight:700; cursor:pointer; transition:all .15s;
 }
 .btn-primary { background:#2563EB; color:#fff; width:100%; }
 .btn-primary:hover { background:#1D4ED8; }
 .btn-danger  { background:#DC2626; color:#fff; width:100%; margin-top:8px; }
 .btn-danger:hover { background:#B91C1C; }
 .btn-cancel  { background:#334155; color:#94A3B8; width:100%; margin-top:6px; }
-.btn-cancel:hover { background:#475569; color:#E2E8F0; }
-
-.error-msg { color:#EF4444; font-size:12px; margin-top:-8px; margin-bottom:10px; }
+.btn-cancel:hover { background:#475569; }
+.error-msg   { color:#EF4444; font-size:12px; margin-top:-8px; margin-bottom:10px; }
 .success-msg { color:#22C55E; font-size:12px; margin-top:8px; text-align:center; }
-
-.form-row { margin-bottom:14px; }
-.section-title { font-size:13px; font-weight:700; color:#60A5FA; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid #334155; }
-
+.section-title {
+  font-size:13px; font-weight:700; color:#60A5FA;
+  margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid #334155;
+}
 .exit-icon { font-size:40px; text-align:center; margin-bottom:12px; }
-.exit-msg  { text-align:center; color:#94A3B8; font-size:13px; line-height:1.6; margin-bottom:16px; }
+.exit-msg {
+  text-align:center; color:#94A3B8; font-size:13px;
+  line-height:1.6; margin-bottom:16px; padding:0 10px; word-break:break-word;
+}
+.badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+.badge-blue { background:#1E40AF40; color:#93C5FD; }
+.badge-red  { background:#7F1D1D40; color:#FCA5A5; }
 </style>
 </head>
 <body>
 <div class="header">
-  <span style="font-size:20px">🔐</span>
+  <span style="font-size:20px" id="headerIcon">🔐</span>
   <div>
     <div class="header-title" id="headerTitle">Pengaturan</div>
-    <div class="header-sub" id="headerSub">Masukkan password untuk melanjutkan</div>
+    <div class="header-sub"  id="headerSub">Masukkan password untuk melanjutkan</div>
   </div>
   <button class="close-btn" onclick="closeWin()">✕</button>
 </div>
 
 <div class="body">
-
-  <!-- PIN Gate -->
-  <div id="pinGate">
-    <label class="label">Password Admin</label>
-    <input type="password" class="input-field" id="pinInput"
-           placeholder="Masukkan password..."
-           onkeydown="if(event.key==='Enter') verifyPin()">
-    <div class="error-msg" id="pinErr" style="display:none">❌ Password salah!</div>
-    <button class="btn btn-primary" onclick="verifyPin()">🔓 Verifikasi</button>
-    <button class="btn btn-cancel" onclick="closeWin()" style="margin-top:8px">Batal</button>
-  </div>
-
-  <!-- Settings Body (setelah PIN benar) -->
-  <div id="settingsBody">
-    <div class="section-title">⚙️ Konfigurasi Aplikasi</div>
-
-    <div class="form-row">
-      <label class="label">URL Server Ujian</label>
-      <input type="text" class="input-field" id="cfgUrl" placeholder="https://...">
-    </div>
-
-    <div class="form-row">
-      <label class="label">Password Admin (Kosongkan jika tidak diubah)</label>
-      <input type="password" class="input-field" id="cfgPass" placeholder="Password baru...">
-    </div>
-
-    <button class="btn btn-primary" onclick="saveSettings()">💾 Simpan Pengaturan</button>
-    <div class="success-msg" id="saveMsg" style="display:none">✅ Pengaturan berhasil disimpan!</div>
-    <button class="btn btn-danger" onclick="showExitConfirm()">🚪 Keluar dari Ujian</button>
-    <button class="btn btn-cancel" onclick="closeWin()">Tutup</button>
-  </div>
-
-  <!-- Exit confirm -->
-  <div id="exitBody">
-    <div class="exit-icon">⚠️</div>
-    <div class="exit-msg">
-      Anda akan keluar dari ExamBrowser.<br>
-      Pastikan ujian siswa sudah selesai sebelum menutup aplikasi.
-    </div>
-    <button class="btn btn-danger" onclick="exitApp()">✅ Ya, Keluar dari Aplikasi</button>
+  <div id="exitPinGate">
+    <div class="exit-icon">🚪</div>
+    <div class="exit-msg">Masukkan <strong>PIN Keluar</strong> dari proktor untuk menutup ExamBrowser.</div>
+    <label class="label">PIN Keluar <span class="badge badge-blue">diberikan proktor</span></label>
+    <input type="password" class="input-field" id="exitPinInput"
+           placeholder="Masukkan PIN keluar..."
+           onkeydown="if(event.key==='Enter') verifyExitPin()">
+    <div class="error-msg" id="exitPinErr" style="display:none">PIN salah! Coba lagi.</div>
+    <button class="btn btn-danger" onclick="verifyExitPin()">Keluar dari Aplikasi</button>
     <button class="btn btn-cancel" onclick="closeWin()">Batal, Kembali ke Ujian</button>
   </div>
 
+  <div id="settingsPinGate" style="display:none">
+    <label class="label">Password Admin <span class="badge badge-red">rahasia</span></label>
+    <input type="password" class="input-field" id="settingsPinInput"
+           placeholder="Password admin..."
+           onkeydown="if(event.key==='Enter') verifySettingsPin()">
+    <div class="error-msg" id="settingsPinErr" style="display:none">Password salah!</div>
+    <button class="btn btn-primary" onclick="verifySettingsPin()">Masuk Pengaturan</button>
+    <button class="btn btn-cancel" onclick="closeWin()">Batal</button>
+  </div>
+
+  <div id="settingsBody" style="display:none">
+    <div class="section-title">Konfigurasi Aplikasi</div>
+    <div style="margin-bottom:14px">
+      <label class="label">URL Server Ujian</label>
+      <input type="text" class="input-field" id="cfgUrl" placeholder="https://...">
+    </div>
+    <div style="margin-bottom:14px">
+      <label class="label">Password Admin Baru <small style="color:#475569">(kosongkan jika tidak diubah)</small></label>
+      <input type="password" class="input-field" id="cfgPass" placeholder="Password admin baru...">
+    </div>
+    <div style="margin-bottom:14px">
+      <label class="label">PIN Keluar Proktor Baru <small style="color:#475569">(kosongkan jika tidak diubah)</small></label>
+      <input type="text" class="input-field" id="cfgExitPass" placeholder="Contoh: 12345" maxlength="10">
+    </div>
+    <button class="btn btn-primary" onclick="saveSettings()">Simpan Pengaturan</button>
+    <div class="success-msg" id="saveMsg" style="display:none">Pengaturan berhasil disimpan!</div>
+    <button class="btn btn-cancel" onclick="closeWin()" style="margin-top:12px">Tutup</button>
+  </div>
 </div>
 
 <script>
-let mode = 'settings'; // 'settings' or 'exit'
-let config = {};
+var mode = 'settings';
+var config = {};
 
 async function init() {
   config = await window.examAPI.getConfig();
-  // Cek apakah mode exit (dipanggil dari kiosk)
-  const url = new URL(window.location.href);
-  mode = url.searchParams.get('mode') || 'settings';
+  var params = new URLSearchParams(window.location.search);
+  mode = params.get('mode') || 'settings';
   if (mode === 'exit') {
-    document.getElementById('headerTitle').textContent = 'Keluar dari Ujian';
-    document.getElementById('headerSub').textContent   = 'Masukkan password untuk keluar';
+    document.getElementById('headerIcon').textContent = 'D';
+    document.getElementById('headerTitle').textContent = 'Keluar dari ExamBrowser';
+    document.getElementById('headerSub').textContent = 'Masukkan PIN keluar dari proktor';
+    document.getElementById('exitPinGate').style.display = 'block';
+    document.getElementById('settingsPinGate').style.display = 'none';
+    setTimeout(function(){ document.getElementById('exitPinInput').focus(); }, 100);
+  } else {
+    document.getElementById('exitPinGate').style.display = 'none';
+    document.getElementById('settingsPinGate').style.display = 'block';
+    setTimeout(function(){ document.getElementById('settingsPinInput').focus(); }, 100);
   }
 }
 
-async function verifyPin() {
-  const pass = document.getElementById('pinInput').value;
-  const ok   = await window.examAPI.verifyPassword(pass);
+async function verifyExitPin() {
+  var pin = document.getElementById('exitPinInput').value.trim();
+  var ok  = await window.examAPI.verifyExitPassword(pin);
   if (!ok) {
-    document.getElementById('pinErr').style.display = 'block';
-    document.getElementById('pinInput').value = '';
-    document.getElementById('pinInput').focus();
+    document.getElementById('exitPinErr').style.display = 'block';
+    document.getElementById('exitPinInput').value = '';
+    document.getElementById('exitPinInput').focus();
     return;
   }
-  document.getElementById('pinErr').style.display = 'none';
-  if (mode === 'exit') {
-    document.getElementById('pinGate').style.display    = 'none';
-    document.getElementById('exitBody').style.display   = 'block';
-  } else {
-    document.getElementById('pinGate').style.display        = 'none';
-    document.getElementById('settingsBody').style.display   = 'block';
-    document.getElementById('cfgUrl').value  = config.url || '';
+  window.examAPI.exitApp();
+}
+
+async function verifySettingsPin() {
+  var pass = document.getElementById('settingsPinInput').value;
+  var ok   = await window.examAPI.verifyPassword(pass);
+  if (!ok) {
+    document.getElementById('settingsPinErr').style.display = 'block';
+    document.getElementById('settingsPinInput').value = '';
+    document.getElementById('settingsPinInput').focus();
+    return;
   }
+  document.getElementById('settingsPinErr').style.display = 'none';
+  document.getElementById('settingsPinGate').style.display = 'none';
+  document.getElementById('settingsBody').style.display = 'block';
+  document.getElementById('cfgUrl').value = config.url || '';
 }
 
 async function saveSettings() {
-  const newUrl  = document.getElementById('cfgUrl').value.trim();
-  const newPass = document.getElementById('cfgPass').value.trim();
-  const updated = { url: newUrl || config.url };
-  if (newPass) updated.settings_pass = newPass;
+  var newUrl      = document.getElementById('cfgUrl').value.trim();
+  var newPass     = document.getElementById('cfgPass').value.trim();
+  var newExitPass = document.getElementById('cfgExitPass').value.trim();
+  var updated = {};
+  if (newUrl)      updated.url           = newUrl;
+  if (newPass)     updated.settings_pass = newPass;
+  if (newExitPass) updated.exit_pass     = newExitPass;
   await window.examAPI.saveConfig(updated);
   document.getElementById('saveMsg').style.display = 'block';
-  setTimeout(() => document.getElementById('saveMsg').style.display='none', 3000);
+  document.getElementById('cfgPass').value = '';
+  document.getElementById('cfgExitPass').value = '';
+  setTimeout(function(){ document.getElementById('saveMsg').style.display='none'; }, 3000);
 }
 
-function showExitConfirm() {
-  document.getElementById('settingsBody').style.display = 'none';
-  document.getElementById('exitBody').style.display     = 'block';
-}
-
-function exitApp() { window.examAPI.exitApp(); }
 function closeWin() { window.examAPI.closeSettings(); }
-
 init();
 </script>
 </body>
