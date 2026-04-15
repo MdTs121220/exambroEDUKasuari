@@ -24,18 +24,14 @@
     "copyright": "© 2025 EDU Timur Kasuari",
     "win": {
       "target": [{"target": "nsis", "arch": ["x64"]}],
-      "icon": "assets/icon.ico",
       "requestedExecutionLevel": "requireAdministrator"
     },
     "linux": {
-      "target": "AppImage",
-      "icon": "assets/icon.png"
+      "target": "AppImage"
     },
     "nsis": {
       "oneClick": true,
       "allowToChangeInstallationDirectory": false,
-      "installerIcon": "assets/icon.ico",
-      "installerHeaderIcon": "assets/icon.ico",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "ExamBrowser EDU Kasuari"

@@ -30,28 +30,3 @@ jobs:
           name: ExamBrowser-EDU-Kasuari-Windows
           path: dist/*.exe
           retention-days: 30
-
-  build-linux:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build Linux AppImage
-        run: npm run build:linux
-
-      - name: Upload AppImage
-        uses: actions/upload-artifact@v4
-        with:
-          name: ExamBrowser-EDU-Kasuari-Linux
-          path: dist/*.AppImage
-          retention-days: 30
