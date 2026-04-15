@@ -19,6 +19,7 @@
     "electron-builder": "^24.9.1"
   },
   "build": {
+    "publish": "never",
     "appId": "com.edutimurkasuari.exambro",
     "productName": "ExamBrowser EDU Kasuari",
     "copyright": "© 2025 EDU Timur Kasuari",
