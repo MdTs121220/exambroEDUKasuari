@@ -134,8 +134,8 @@ function showExitDialog() {
   if (settingsWin && !settingsWin.isDestroyed()) return;
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   settingsWin = new BrowserWindow({
-    width: 440, height: 340,
-    x: Math.round((width-440)/2), y: Math.round((height-340)/2),
+    width: 520, height: 380,
+    x: Math.round((width-520)/2), y: Math.round((height-380)/2),
     frame: false, resizable: false, alwaysOnTop: true,
     backgroundColor: '#1E293B',
     webPreferences: {
