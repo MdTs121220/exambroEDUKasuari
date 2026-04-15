@@ -71,7 +71,9 @@ function createChecker() {
 }
 
 function launchKiosk() {
-  if (checkerWin && !checkerWin.isDestroyed()) { checkerWin.destroy(); checkerWin = null; }
+  // Sembunyikan checker dulu, jangan destroy — biar IPC reply sempat terkirim
+  if (checkerWin && !checkerWin.isDestroyed()) checkerWin.hide();
+
   try { psBlockerId = powerSaveBlocker.start('prevent-display-sleep'); } catch(e) {}
 
   const { width, height } = screen.getPrimaryDisplay().size;
@@ -80,6 +82,7 @@ function launchKiosk() {
     frame: false, resizable: false, movable: false,
     minimizable: false, maximizable: false, closable: false,
     alwaysOnTop: true, fullscreen: true,
+    show: false,  // tampilkan setelah ready-to-show
     backgroundColor: '#0F172A',
     webPreferences: {
       nodeIntegration: false, contextIsolation: true,
@@ -89,7 +92,13 @@ function launchKiosk() {
   });
 
   browserWin.setContentProtection(true);
-  browserWin.setFullScreen(true);
+
+  // Destroy checkerWin dan tampilkan browserWin hanya setelah siap
+  browserWin.once('ready-to-show', () => {
+    if (checkerWin && !checkerWin.isDestroyed()) { checkerWin.destroy(); checkerWin = null; }
+    browserWin.setFullScreen(true);
+    browserWin.show();
+  });
 
   browserWin.webContents.on('devtools-opened', () => browserWin.webContents.closeDevTools());
   browserWin.webContents.on('before-input-event', (e, input) => {
@@ -177,9 +186,9 @@ ipcMain.handle('close-settings',  ()      => { if (settingsWin && !settingsWin.i
 ipcMain.handle('exit-app',        ()      => { globalShortcut.unregisterAll(); app.exit(0); });
 
 ipcMain.handle('launch-kiosk', () => {
-  setImmediate(() => {
+  setTimeout(() => {
     try { launchKiosk(); } catch(err) { console.error('launchKiosk error:', err); }
-  });
+  }, 100);
   return { ok: true };
 });
 
