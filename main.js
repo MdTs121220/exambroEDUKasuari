@@ -1,20 +1,18 @@
-const { app, BrowserWindow, globalShortcut, session, dialog,
-        ipcMain, screen, shell, powerSaveBlocker } = require('electron');
+const { app, BrowserWindow, globalShortcut, session,
+        ipcMain, screen, powerSaveBlocker } = require('electron');
 const path = require('path');
 const os   = require('os');
 const dns  = require('dns');
 const fs   = require('fs');
 
-// ── Konfigurasi (simpan di file JSON lokal) ───────────────────
 const CONFIG_PATH = path.join(app.getPath('userData'), 'config.json');
 
 function loadConfig() {
   const defaults = {
-    url:             'https://edu.timurkasuari.com/cbt/',
-    settings_pass:   'edukasuari2025',
-    exit_hint:       'Kombinasi tombol rahasia: Ctrl+Shift+Q',
-    app_name:        'ExamBrowser EDU Kasuari',
-    version:         '1.0.0',
+    url:           'https://edu.timurkasuari.com/cbt/',
+    settings_pass: 'edukasuari2025',
+    version:       '1.0.0',
+    app_name:      'ExamBrowser EDU Kasuari',
   };
   try {
     if (fs.existsSync(CONFIG_PATH)) {
@@ -29,264 +27,170 @@ function saveConfig(data) {
 }
 
 let config = loadConfig();
-
-// ── State windows ──────────────────────────────────────────────
-let splashWin   = null;
-let checkerWin  = null;
-let browserWin  = null;
-let settingsWin = null;
+let splashWin = null, checkerWin = null, browserWin = null, settingsWin = null;
 let psBlockerId = null;
 
-// Cegah multi-instance
-const gotLock = app.requestSingleInstanceLock();
-if (!gotLock) { app.quit(); }
+if (!app.requestSingleInstanceLock()) { app.quit(); }
 
-// ── 1. SPLASH SCREEN ──────────────────────────────────────────
 function createSplash() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   splashWin = new BrowserWindow({
-    width:  520,
-    height: 360,
-    x: Math.round((width - 520) / 2),
-    y: Math.round((height - 360) / 2),
-    frame:           false,
-    resizable:       false,
-    alwaysOnTop:     true,
-    skipTaskbar:     true,
-    transparent:     false,
+    width: 520, height: 360,
+    x: Math.round((width-520)/2), y: Math.round((height-360)/2),
+    frame: false, resizable: false, alwaysOnTop: true, skipTaskbar: true,
     backgroundColor: '#0F172A',
-    webPreferences:  { nodeIntegration: false, contextIsolation: true },
+    webPreferences: { nodeIntegration: false, contextIsolation: true },
   });
   splashWin.loadFile('splash.html');
   splashWin.setContentProtection(true);
-
-  // Setelah 3 detik → buka system checker
   setTimeout(() => {
     createChecker();
     if (splashWin && !splashWin.isDestroyed()) splashWin.destroy();
+    splashWin = null;
   }, 3000);
 }
 
-// ── 2. SYSTEM CHECKER ─────────────────────────────────────────
 function createChecker() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   checkerWin = new BrowserWindow({
-    width:  700,
-    height: 640,
-    x: Math.round((width - 700) / 2),
-    y: Math.round((height - 640) / 2),
-    frame:           false,
-    resizable:       false,
-    alwaysOnTop:     true,
+    width: 700, height: 640,
+    x: Math.round((width-700)/2), y: Math.round((height-640)/2),
+    frame: false, resizable: false, alwaysOnTop: true,
     backgroundColor: '#0F172A',
     webPreferences: {
-      nodeIntegration:  false,
-      contextIsolation: true,
-      preload:          path.join(__dirname, 'preload.js'),
+      nodeIntegration: false, contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js'),
     },
   });
   checkerWin.loadFile('checker.html');
   checkerWin.setContentProtection(true);
   checkerWin.webContents.on('before-input-event', (e, input) => {
-    // Blokir F12 / Ctrl+Shift+I
-    if (input.key === 'F12' ||
-        (input.control && input.shift && ['I','J','C'].includes(input.key.toUpperCase()))) {
+    if (input.key === 'F12' || (input.control && input.shift && 'IJC'.includes(input.key.toUpperCase())))
       e.preventDefault();
-    }
   });
 }
 
-// ── 3. KIOSK BROWSER ─────────────────────────────────────────
 function launchKiosk() {
-  if (checkerWin && !checkerWin.isDestroyed()) checkerWin.destroy();
+  if (checkerWin && !checkerWin.isDestroyed()) { checkerWin.destroy(); checkerWin = null; }
+  try { psBlockerId = powerSaveBlocker.start('prevent-display-sleep'); } catch(e) {}
 
-  // Cegah layar mati
-  psBlockerId = powerSaveBlocker.start('prevent-display-sleep');
-
+  const { width, height } = screen.getPrimaryDisplay().size;
   browserWin = new BrowserWindow({
-    fullscreen:   true,
-    kiosk:        true,
-    frame:        false,
-    alwaysOnTop:  true,
+    width, height, x: 0, y: 0,
+    frame: false, resizable: false, movable: false,
+    minimizable: false, maximizable: false, closable: false,
+    alwaysOnTop: true, fullscreen: true,
     backgroundColor: '#0F172A',
     webPreferences: {
-      nodeIntegration:        false,
-      contextIsolation:       true,
-      preload:                path.join(__dirname, 'preload.js'),
-      webSecurity:            true,
-      allowRunningInsecureContent: false,
+      nodeIntegration: false, contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js'),
+      webSecurity: true,
     },
   });
 
-  // Blokir screenshot & screen recording
   browserWin.setContentProtection(true);
+  browserWin.setFullScreen(true);
 
-  // Blokir DevTools
-  browserWin.webContents.on('devtools-opened', () => {
-    browserWin.webContents.closeDevTools();
-  });
+  browserWin.webContents.on('devtools-opened', () => browserWin.webContents.closeDevTools());
   browserWin.webContents.on('before-input-event', (e, input) => {
     if (input.key === 'F12' ||
-        (input.control && input.shift && ['I','J','C'].includes(input.key.toUpperCase())) ||
-        (input.control && input.key === 'U')) {
+        (input.control && input.shift && 'IJC'.includes(input.key.toUpperCase())) ||
+        (input.control && input.key === 'U'))
       e.preventDefault();
-    }
   });
 
-  // Blokir navigasi ke URL lain
-  const allowedDomain = 'edu.timurkasuari.com';
+  const allowed = 'edu.timurkasuari.com';
   browserWin.webContents.on('will-navigate', (e, url) => {
-    try {
-      const host = new URL(url).hostname;
-      if (!host.endsWith(allowedDomain)) { e.preventDefault(); }
-    } catch(_) { e.preventDefault(); }
+    try { if (!new URL(url).hostname.endsWith(allowed)) e.preventDefault(); }
+    catch(_) { e.preventDefault(); }
   });
   browserWin.webContents.setWindowOpenHandler(({ url }) => {
-    try {
-      const host = new URL(url).hostname;
-      if (host.endsWith(allowedDomain)) {
-        browserWin.webContents.loadURL(url);
-      }
-    } catch(_) {}
+    try { if (new URL(url).hostname.endsWith(allowed)) browserWin.webContents.loadURL(url); }
+    catch(_) {}
     return { action: 'deny' };
   });
-
-  browserWin.loadURL(config.url).catch(e => {
-    console.error('loadURL error:', e);
+  browserWin.webContents.on('did-fail-load', () => {
+    setTimeout(() => {
+      if (browserWin && !browserWin.isDestroyed()) browserWin.loadURL(config.url);
+    }, 3000);
   });
+  browserWin.on('closed', () => { browserWin = null; });
+  browserWin.loadURL(config.url);
 
-  // ── Shortcut keluar rahasia: Ctrl+Shift+Q ─────────────────
-  globalShortcut.register('Control+Shift+Q', () => showExitPrompt());
-  // Juga: Ctrl+H+C+B simulasi via sequence (karena Electron tidak support 3-key)
-  // Alternatif: Ctrl+Alt+F4
-  globalShortcut.register('Control+Alt+F4', () => showExitPrompt());
+  globalShortcut.register('Control+Shift+Q', () => showExitDialog());
+  globalShortcut.register('Control+Alt+F4',  () => showExitDialog());
 }
 
-// ── Prompt keluar (minta password) ───────────────────────────
-function showExitPrompt() {
+function showExitDialog() {
   if (settingsWin && !settingsWin.isDestroyed()) return;
-
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   settingsWin = new BrowserWindow({
-    width:  420,
-    height: 320,
-    x: Math.round((width - 420) / 2),
-    y: Math.round((height - 320) / 2),
-    frame:       false,
-    resizable:   false,
-    alwaysOnTop: true,
-    modal:       false,
+    width: 440, height: 340,
+    x: Math.round((width-440)/2), y: Math.round((height-340)/2),
+    frame: false, resizable: false, alwaysOnTop: true,
     backgroundColor: '#1E293B',
     webPreferences: {
-      nodeIntegration:  false,
-      contextIsolation: true,
-      preload:          path.join(__dirname, 'preload.js'),
+      nodeIntegration: false, contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js'),
+    },
+  });
+  settingsWin.loadFile('settings.html', { query: { mode: 'exit' } });
+  settingsWin.setContentProtection(true);
+}
+
+function openSettings() {
+  if (settingsWin && !settingsWin.isDestroyed()) return;
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+  settingsWin = new BrowserWindow({
+    width: 500, height: 440,
+    x: Math.round((width-500)/2), y: Math.round((height-440)/2),
+    frame: false, resizable: false, alwaysOnTop: true,
+    backgroundColor: '#1E293B',
+    webPreferences: {
+      nodeIntegration: false, contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js'),
     },
   });
   settingsWin.loadFile('settings.html');
   settingsWin.setContentProtection(true);
 }
 
-// ── 4. SETTINGS (dari checker) ────────────────────────────────
-function openSettings() {
-  if (settingsWin && !settingsWin.isDestroyed()) return;
-  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
-  settingsWin = new BrowserWindow({
-    width:  500,
-    height: 420,
-    x: Math.round((width - 500) / 2),
-    y: Math.round((height - 420) / 2),
-    frame:       false,
-    resizable:   false,
-    alwaysOnTop: true,
-    backgroundColor: '#1E293B',
-    webPreferences: {
-      nodeIntegration:  false,
-      contextIsolation: true,
-      preload:          path.join(__dirname, 'preload.js'),
-    },
-  });
-  settingsWin.loadFile('settings.html');
-  settingsWin.query = 'full'; // mode edit penuh
-}
-
-// ── IPC Handlers ──────────────────────────────────────────────
 ipcMain.handle('get-system-info', async () => {
   const cpus = os.cpus();
-  const totalMem = Math.round(os.totalmem() / 1024 / 1024);
-  const { width, height } = screen.getPrimaryDisplay().size;
+  const disp = screen.getPrimaryDisplay();
   const online = await checkInternet();
   return {
-    os:         `${os.type()} ${os.release()} (${os.arch()})`,
-    cpu:        cpus[0]?.model || 'Unknown',
-    cores:      cpus.length,
-    ram:        totalMem,
-    resolution: `${width}x${height}`,
-    online,
-    version:    config.version,
-    app_name:   config.app_name,
-    url:        config.url,
+    os: `${os.type()} ${os.release()} (${os.arch()})`,
+    cpu: cpus[0]?.model || 'Unknown',
+    cores: cpus.length,
+    ram: Math.round(os.totalmem()/1024/1024),
+    resolution: `${disp.size.width}x${disp.size.height}`,
+    online, version: config.version, app_name: config.app_name, url: config.url,
   };
 });
 
-ipcMain.handle('get-config', () => config);
+ipcMain.handle('get-config',      ()      => config);
+ipcMain.handle('verify-password', (_, p)  => p === config.settings_pass);
+ipcMain.handle('save-config',     (_, c)  => { config = Object.assign(config, c); saveConfig(config); return true; });
+ipcMain.handle('open-settings',   ()      => { openSettings(); return true; });
+ipcMain.handle('close-settings',  ()      => { if (settingsWin && !settingsWin.isDestroyed()) { settingsWin.destroy(); settingsWin = null; } return true; });
+ipcMain.handle('exit-app',        ()      => { globalShortcut.unregisterAll(); app.exit(0); });
 
-ipcMain.handle('verify-password', (_, pass) => pass === config.settings_pass);
-
-ipcMain.handle('save-config', (_, newConfig) => {
-  config = Object.assign(config, newConfig);
-  saveConfig(config);
-  return true;
-});
-
-ipcMain.handle('launch-kiosk', async () => {
-  try {
-    launchKiosk();
-    return { ok: true };
-  } catch (e) {
-    console.error('launch-kiosk error:', e);
-    return { ok: false, error: e.message };
-  }
-});
-
-ipcMain.handle('open-settings', () => {
-  openSettings();
-});
-
-ipcMain.handle('close-settings', () => {
-  if (settingsWin && !settingsWin.isDestroyed()) settingsWin.destroy();
-});
-
-ipcMain.handle('exit-app', () => {
-  globalShortcut.unregisterAll();
-  if (psBlockerId !== null) powerSaveBlocker.stop(psBlockerId);
-  app.quit();
-});
-
-// ── Cek internet ──────────────────────────────────────────────
-function checkInternet() {
-  return new Promise(resolve => {
-    dns.resolve('edu.timurkasuari.com', err => resolve(!err));
+ipcMain.handle('launch-kiosk', () => {
+  setImmediate(() => {
+    try { launchKiosk(); } catch(err) { console.error('launchKiosk error:', err); }
   });
+  return { ok: true };
+});
+
+function checkInternet() {
+  return new Promise(resolve => dns.resolve('edu.timurkasuari.com', err => resolve(!err)));
 }
 
-// ── App ready ─────────────────────────────────────────────────
 app.whenReady().then(() => {
-  // Blokir permission kamera, mic, dll
-  session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
-    const allowed = ['notifications'];
-    callback(allowed.includes(permission));
-  });
-
+  session.defaultSession.setPermissionRequestHandler((wc, perm, cb) => cb(perm === 'notifications'));
   createSplash();
 });
 
-app.on('window-all-closed', () => {
-  globalShortcut.unregisterAll();
-  if (psBlockerId !== null) powerSaveBlocker.stop(psBlockerId);
-  if (process.platform !== 'darwin') app.quit();
-});
-
-app.on('before-quit', () => {
-  globalShortcut.unregisterAll();
-});
+app.on('window-all-closed', () => { globalShortcut.unregisterAll(); if (process.platform !== 'darwin') app.quit(); });
+app.on('before-quit', () => globalShortcut.unregisterAll());
