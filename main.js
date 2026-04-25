@@ -200,6 +200,11 @@ function checkInternet() {
 
 app.whenReady().then(() => {
   session.defaultSession.setPermissionRequestHandler((wc, perm, cb) => cb(perm === 'notifications'));
+  session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
+    const ua = details.requestHeaders['User-Agent'] || '';
+    details.requestHeaders['User-Agent'] = ua + ' EDUKasuariExamBrowser/1.0 Windows';
+    callback({ requestHeaders: details.requestHeaders });
+  });
   createSplash();
 });
 
