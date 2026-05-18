@@ -1,13 +1,17 @@
-name: Build ExamBrowser EDU Kasuari
+name: Build & Release ExamBrowser EDU Kasuari
 
 on:
   push:
-    branches: [ main ]
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 jobs:
   build-windows:
     runs-on: windows-latest
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,12 +25,7 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build Windows Installer
-        run: npm run build:win
-
-      - name: Upload Installer
-        uses: actions/upload-artifact@v4
-        with:
-          name: ExamBrowser-EDU-Kasuari-Windows
-          path: dist/*.exe
-          retention-days: 30
+      - name: Build & Upload to GitHub Releases
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-builder --win --publish always
