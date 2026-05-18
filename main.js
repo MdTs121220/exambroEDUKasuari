@@ -1,5 +1,6 @@
 const { app, BrowserWindow, globalShortcut, session,
-        ipcMain, screen, powerSaveBlocker } = require('electron');
+        ipcMain, screen, powerSaveBlocker, dialog } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const os   = require('os');
 const dns  = require('dns');
@@ -39,9 +40,11 @@ function createSplash() {
     width: 520, height: 360,
     x: Math.round((width-520)/2), y: Math.round((height-360)/2),
     frame: false, resizable: false, alwaysOnTop: true, skipTaskbar: true,
-    backgroundColor: '#0F172A',
+    show: false, backgroundColor: '#0F172A',
     webPreferences: { nodeIntegration: false, contextIsolation: true },
   });
+  splashWin.once('ready-to-show', () => splashWin.show());
+  splashWin.webContents.on('did-fail-load', () => { if (splashWin && !splashWin.isDestroyed()) splashWin.show(); });
   splashWin.loadFile('splash.html');
   splashWin.setContentProtection(true);
   setTimeout(() => {
@@ -57,12 +60,14 @@ function createChecker() {
     width: 700, height: 640,
     x: Math.round((width-700)/2), y: Math.round((height-640)/2),
     frame: false, resizable: false, alwaysOnTop: true,
-    backgroundColor: '#0F172A',
+    show: false, backgroundColor: '#0F172A',
     webPreferences: {
       nodeIntegration: false, contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
     },
   });
+  checkerWin.once('ready-to-show', () => checkerWin.show());
+  checkerWin.webContents.on('did-fail-load', () => { if (checkerWin && !checkerWin.isDestroyed()) checkerWin.show(); });
   checkerWin.loadFile('checker.html');
   // checkerWin.setContentProtection(true);
   checkerWin.webContents.on('before-input-event', (e, input) => {
@@ -198,6 +203,28 @@ function checkInternet() {
   return new Promise(resolve => dns.resolve('edu.timurkasuari.com', err => resolve(!err)));
 }
 
+// ── Auto-updater config ───────────────────────────────────────
+autoUpdater.autoDownload = true;
+autoUpdater.autoInstallOnAppQuit = true;
+
+autoUpdater.on('update-available', (info) => {
+  console.log('Update tersedia:', info.version);
+});
+autoUpdater.on('download-progress', (progress) => {
+  if (browserWin && !browserWin.isDestroyed())
+    browserWin.webContents.send('update-progress', Math.round(progress.percent));
+});
+autoUpdater.on('update-downloaded', (info) => {
+  dialog.showMessageBox({
+    type: 'info', title: 'Update Tersedia',
+    message: `ExamBrowser EDU Kasuari v${info.version} sudah diunduh.`,
+    detail: 'Update akan diinstall saat aplikasi ditutup. Klik "Restart Sekarang" untuk langsung mengupdate.',
+    buttons: ['Restart Sekarang', 'Nanti Saja'], defaultId: 0,
+  }).then(result => { if (result.response === 0) autoUpdater.quitAndInstall(false, true); });
+});
+autoUpdater.on('update-not-available', () => console.log('Aplikasi sudah versi terbaru.'));
+autoUpdater.on('error', (err) => console.log('Auto-update error:', err.message));
+
 app.whenReady().then(() => {
   session.defaultSession.setPermissionRequestHandler((wc, perm, cb) => cb(perm === 'notifications'));
   session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
@@ -206,6 +233,10 @@ app.whenReady().then(() => {
     callback({ requestHeaders: details.requestHeaders });
   });
   createSplash();
+  // Cek update 5 detik setelah startup
+  setTimeout(() => {
+    autoUpdater.checkForUpdates().catch(err => console.log('Update check failed:', err.message));
+  }, 5000);
 });
 
 app.on('window-all-closed', () => { globalShortcut.unregisterAll(); if (process.platform !== 'darwin') app.quit(); });
